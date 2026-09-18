@@ -1,1 +1,53 @@
-/home/borags/.config/bspwm/bspwmrc
+#! /bin/sh
+export PATH="$HOME/.local/bin:$PATH"
+
+pgrep -x sxhkd > /dev/null || sxhkd &
+
+bspc monitor -d 1 2 3 4 5 6 7 8 9 0
+
+bspc config border_width 2
+bspc config window_gap 10
+bspc config top_padding 10
+
+bspc config split_ratio 0.5
+bspc config borderless_monocle true
+bspc config gapless_monocle true
+bspc config corner_radius 4
+
+bspc config focus_follows_pointer true
+
+
+
+# Auto Start
+/usr/lib/polkit-kde-authentication-agent-1 &
+eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
+export SSH_AUTH_SOCK &
+
+xset s off -dpms &
+
+sxhkd &
+picom --config ~/.config/picom/picom.conf &
+dunst &
+unclutter --idle 2 &
+
+chmod +x ~/.local/bin/bspc-switch-anim &
+chmod +x ~/.config/bspwm/scripts/switch_workspace.sh &
+chmod +x ~/.config/polybar/scripts/network.sh &
+chmod +x ~/.config/polybar/scripts/nowPlaying.sh &
+chmod +x ~/.config/polybar/scripts/nowPlayingLauncher.sh &
+chmod +x ~/.config/polybar/scripts/status.sh &
+
+polybar first &
+polybar center &
+polybar right &
+
+
+# start up softwares
+steam -silent &
+discord --start-minimized &
+
+# mouse
+xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5
+xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile" 0 1
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 650
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000
