@@ -1,0 +1,146 @@
+/**
+ * achromatic — pure black, card-style rofi theme
+ *
+ * Colours come from the kitty scheme. There is no accent colour:
+ * brightness is the only signal, and pure white is kept for what is
+ * active (selected card, typed text, matched letters).
+ */
+
+* {
+    /* kitty palette */
+    bg:        #000000;   /* background                             */
+    card:      #1a1a1a;   /* color0                card outlines    */
+    card-sel:  #333333;   /* selection_background  selected card    */
+    fg-dim:    #505050;   /* color8                prompt, counter  */
+    fg:        #757575;   /* foreground            normal entries   */
+    fg-soft:   #8c8c8c;   /* color15               active entries   */
+    fg-hi:     #ffffff;   /* color10/11            highlighted text */
+
+    font: "JetBrainsMono Nerd Font 11";
+    /* font: "Google Sans Flex Medium 11"; */
+
+    background-color: transparent;
+    text-color:       @fg;
+    margin:           0;
+    padding:          0;
+    spacing:          0;
+}
+
+/* outer card */
+window {
+    location:         center;
+    anchor:           center;
+    width:            600px;
+    background-color: @bg;          /* e.g. #000000e6 if you want picom blur */
+    border:           1px;
+    border-color:     @card;
+    border-radius:    18px;
+}
+
+mainbox {
+    padding:  12px;
+    spacing:  10px;
+    children: [ inputbar, message, listview ];
+}
+
+/* search card */
+inputbar {
+    padding:       14px;
+    spacing:       10px;
+    border:        1px;
+    border-color:  @card;
+    border-radius: 10px;
+    children:      [ prompt, entry, box-count ];
+}
+
+prompt {
+    text-color: @fg-dim;
+}
+
+entry {
+    text-color: @fg-hi;
+}
+
+/* 12/340 */
+box-count {
+    orientation: horizontal;
+    expand:      false;
+    children:    [ num-filtered-rows, textbox-num-sep, num-rows ];
+}
+
+num-filtered-rows,
+num-rows,
+textbox-num-sep {
+    expand:     false;
+    text-color: @fg-dim;
+}
+
+textbox-num-sep {
+    str: "/";
+}
+
+/* result cards */
+listview {
+    lines:        8;
+    columns:      1;
+    spacing:      6px;
+    cycle:        true;
+    scrollbar:    false;
+    fixed-height: false;   /* shrink while filtering; true keeps 8 rows */
+}
+
+element {
+    padding:       10px 14px;
+    spacing:       12px;
+    border:        1px;
+    border-color:  @card;
+    border-radius: 10px;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color: @bg;
+    text-color:       @fg;
+}
+
+element normal.active,
+element alternate.active {
+    background-color: @bg;
+    text-color:       @fg-soft;
+}
+
+element normal.urgent,
+element alternate.urgent {
+    background-color: @bg;
+    text-color:       @fg-hi;
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: @card-sel;
+    border-color:     @fg-dim;
+    text-color:       @fg-hi;
+}
+
+element-icon {
+    size: 1.3em;
+}
+
+element-text {
+    text-color:     inherit;
+    highlight:      bold #ffffff;   /* matched letters */
+    vertical-align: 0.5;
+}
+
+/* dmenu -mesg, errors */
+message {
+    padding:       10px 14px;
+    border:        1px;
+    border-color:  @card;
+    border-radius: 10px;
+}
+
+textbox {
+    text-color: @fg;
+}

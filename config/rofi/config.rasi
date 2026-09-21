@@ -1,0 +1,14 @@
+configuration {
+    modes:               "drun,run,window";   /* Shift+Right or Ctrl+Tab cycles them */
+    terminal:            "kitty";
+    show-icons:          true;   /* true = app icons (colour, unless your icon theme is grey) */
+
+    display-drun:        "Apps";
+    display-run:         "Run";
+    display-window:      "Windows";
+
+    /* app name, then its generic name a step dimmer: "Firefox  Web Browser" */
+    drun-display-format: "{name} [<span size='small' alpha='70%'>{generic}</span>]";
+}
+
+@theme "~/.config/rofi/achromatic.rasi"
