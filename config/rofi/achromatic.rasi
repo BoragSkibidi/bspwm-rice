@@ -1,23 +1,13 @@
-/**
- * achromatic — pure black, card-style rofi theme
- *
- * Colours come from the kitty scheme. There is no accent colour:
- * brightness is the only signal, and pure white is kept for what is
- * active (selected card, typed text, matched letters).
- */
-
 * {
-    /* kitty palette */
-    bg:        #000000;   /* background                             */
-    card:      #1a1a1a;   /* color0                card outlines    */
-    card-sel:  #333333;   /* selection_background  selected card    */
-    fg-dim:    #505050;   /* color8                prompt, counter  */
-    fg:        #757575;   /* foreground            normal entries   */
-    fg-soft:   #8c8c8c;   /* color15               active entries   */
-    fg-hi:     #ffffff;   /* color10/11            highlighted text */
+    bg:        #000000;
+    card:      #1a1a1a;
+    card-sel:  #333333;
+    fg-dim:    #505050;
+    fg:        #757575;
+    fg-soft:   #8c8c8c;
+    fg-hi:     #ffffff;
 
     font: "JetBrainsMono Nerd Font 11";
-    /* font: "Google Sans Flex Medium 11"; */
 
     background-color: transparent;
     text-color:       @fg;
@@ -31,8 +21,8 @@ window {
     location:         center;
     anchor:           center;
     width:            600px;
-    background-color: @bg;          /* e.g. #000000e6 if you want picom blur */
-    border:           1px;
+    background-color: @bg;
+    border:           2px;
     border-color:     @card;
     border-radius:    18px;
 }
