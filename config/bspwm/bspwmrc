@@ -29,6 +29,7 @@ sxhkd &
 picom --config ~/.config/picom/picom.conf &
 dunst &
 unclutter --idle 2 &
+copyq &
 
 chmod +x ~/.local/bin/bspc-switch-anim &
 chmod +x ~/.config/bspwm/scripts/switch_workspace.sh &
