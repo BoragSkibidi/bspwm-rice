@@ -10,5 +10,4 @@ configuration {
     /* app name, then its generic name a step dimmer: "Firefox  Web Browser" */
     drun-display-format: "{name} [<span size='small' alpha='70%'>{generic}</span>]";
 }
-
 @theme "~/.config/rofi/achromatic.rasi"

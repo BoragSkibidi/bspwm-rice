@@ -24,7 +24,7 @@ window {
     background-color: @bg;
     border:           2px;
     border-color:     @card;
-    border-radius:    18px;
+    border-radius:    10px;
 }
 
 mainbox {

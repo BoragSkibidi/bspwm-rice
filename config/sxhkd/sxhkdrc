@@ -128,6 +128,9 @@ XF86AudioMute
     wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
 
 
-#screen snip
+#screenshot
+Print
+	maim -u | xclip -selection clipboard -t image/png
+
 super + shift + s
 	maim -s -u | xclip -selection clipboard -t image/png
