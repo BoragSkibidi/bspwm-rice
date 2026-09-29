@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# bspc-switch-anim — bspwm desktop switching / node sending with a horizontal
+# "conveyor" slide, driven by the _WS_SLIDE property + picom rules.
+#
+#   _WS_SLIDE = 1  ->  target desktop is HIGHER; tagged windows slide LEFT
+#   _WS_SLIDE = 2  ->  target desktop is LOWER;  tagged windows slide RIGHT
+#
+# USAGE
+#   bspc-switch-anim switch      <DESKTOP_SEL>   # pan everything
+#   bspc-switch-anim send-follow <DESKTOP_SEL>   # pan everything EXCEPT the
+#                                                # window being sent, then follow
+#   bspc-switch-anim send        <DESKTOP_SEL>   # only the sent window slides,
+#                                                # stay where you are
+#
+# A bare desktop selector (no mode) is treated as "switch", so old bindings
+# like `bspc-switch-anim ^3` keep working.
+#
+# EXAMPLES
+#   bspc-switch-anim switch ^3
+#   bspc-switch-anim send-follow next.local
+#   bspc-switch-anim send ^5
+
+set -u
+
+DURATION="${WS_SLIDE_DURATION:-0.3}"
+STATE="${XDG_RUNTIME_DIR:-/tmp}/bspc-switch-anim.gen"
+
+mode="${1:-}"
+case $mode in
+    switch|send|send-follow) target="${2:-}" ;;
+    "")   echo "usage: ${0##*/} {switch|send|send-follow} <DESKTOP_SEL>" >&2
+          exit 1 ;;
+    *)    target="$mode"; mode="switch" ;;   # backwards compatible
+esac
+
+if [[ -z $target ]]; then
+    echo "usage: ${0##*/} {switch|send|send-follow} <DESKTOP_SEL>" >&2
+    exit 1
+fi
+
+# Raw fallback if anything below can't be resolved — better a plain, unanimated
+# action than no action at all.
+fallback() {
+    case $mode in
+        switch)      exec bspc desktop -f "$target" ;;
+        send)        exec bspc node -d "$target" ;;
+        send-follow) exec bspc node -d "$target" --follow ;;
+    esac
+}
+
+cur_id=$(bspc query -D -d focused 2>/dev/null) || fallback
+tgt_id=$(bspc query -D -d "$target" 2>/dev/null) || fallback
+[[ -n $cur_id && -n $tgt_id ]] || fallback
+[[ $cur_id == "$tgt_id" ]] && exit 0
+
+# Desktops of the focused monitor, in left-to-right order.
+mapfile -t desks < <(bspc query -D -m focused)
+
+index_of() {
+    local needle=$1 i=0 d
+    for d in "${desks[@]}"; do
+        [[ $d == "$needle" ]] && { printf '%s' "$i"; return 0; }
+        ((i++))
+    done
+    printf '%s' "-1"
+}
+
+cur_idx=$(index_of "$cur_id")
+tgt_idx=$(index_of "$tgt_id")
+# Target on a different monitor: no sensible left/right, so skip the animation.
+[[ $cur_idx -lt 0 || $tgt_idx -lt 0 ]] && fallback
+
+if [[ $tgt_idx -gt $cur_idx ]]; then
+    dir=1   # higher desktop: travel left
+else
+    dir=2   # lower desktop: travel right
+fi
+
+focused_node=$(bspc query -N -n focused 2>/dev/null || true)
+
+# Decide which windows get tagged.
+tagged=()
+case $mode in
+    switch)
+        # Everything leaving and everything arriving moves as one strip.
+        for w in $(bspc query -N -d "$cur_id" -n .window) \
+                 $(bspc query -N -d "$tgt_id" -n .window); do
+            tagged+=("$w")
+        done
+        ;;
+    send-follow)
+        # Everything pans EXCEPT the window travelling with you, so it looks
+        # like that window stays pinned while the desktops slide underneath.
+        for w in $(bspc query -N -d "$cur_id" -n .window) \
+                 $(bspc query -N -d "$tgt_id" -n .window); do
+            [[ $w == "$focused_node" ]] && continue
+            tagged+=("$w")
+        done
+        ;;
+    send)
+        # Only the window being thrown to the other desktop slides away.
+        [[ -n $focused_node ]] || fallback
+        tagged=("$focused_node")
+        ;;
+esac
+
+[[ $mode == send ]] && dir=$((3 - dir))
+
+gen="$RANDOM$RANDOM$$"
+printf '%s' "$gen" > "$STATE" 2>/dev/null || true
+
+for w in "${tagged[@]}"; do
+    xprop -id "$w" -f _WS_SLIDE 32c -set _WS_SLIDE "$dir" 2>/dev/null
+done
+
+case $mode in
+    switch)      bspc desktop -f "$target" ;;
+    send)        bspc node -d "$target" ;;
+    send-follow) bspc node -d "$target" --follow ;;
+esac
+
+# Clear the tags once the slide is over, so a window closed later gets your
+# normal zoom-out instead of flying off the screen.
+(
+    sleep "$DURATION"
+    [[ $(cat "$STATE" 2>/dev/null) == "$gen" ]] || exit 0
+    for w in "${tagged[@]}"; do
+        xprop -id "$w" -remove _WS_SLIDE 2>/dev/null
+    done
+) >/dev/null 2>&1 &
+
+exit 0
