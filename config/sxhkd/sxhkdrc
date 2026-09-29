@@ -134,3 +134,6 @@ Print
 
 super + shift + s
 	maim -s -u | xclip -selection clipboard -t image/png
+
+super + v
+	copyq toggle
