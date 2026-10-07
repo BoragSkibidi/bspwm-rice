@@ -1,144 +1,77 @@
-;; ---------------------------------------------------------------
-;;  eww bar  (bspwm / X11)
-;;  one transparent window across the top, three content-sized pills:
-;;    left   [workspaces] [ram cpu swap gpu] [app name]
-;;    center [day] [date] [time:ms]
-;;    right  [media · volume · network] [system tray]
-;;  start with:  ~/.config/eww/launch.sh   (or: eww daemon && eww open bar)
-;;  sizes live in eww.scss ($margin, $padding); keep the window height below in sync
-;;  (pill 32px + 2 * margin = 42px)
-;; ---------------------------------------------------------------
+// ---- sizes ----
+$margin:  5px;    // gap between the pills and the screen edge
+$padding: 5px;    // space between a pill's edge and its content
+$border:  2px;
+// pill height = 18px content + 2 * $padding + 2 * $border = 32px
+// window height (eww.yuck) = pill + 2 * $margin = 42px
 
-;; ---------- data ----------
-(deflisten clock :initial '{"day":"","date":"","time":""}'
-  "~/.config/eww/scripts/clock.sh")
+// ---- colors ----
+$bg:       #000000;
+$fg:       #757575;
+$primary:  #ffffff;
+$line:     #393939;
+$alert:    #8a0000;
+$disabled: #202020;
+$hover:    #1a1a1a;
+$muted:    #666666;
 
-(deflisten workspaces :initial "[]"
-  "~/.config/eww/scripts/workspaces.sh")
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10pt;
+  color: $fg;
+}
 
-(deflisten app :initial ""
-  "~/.config/eww/scripts/app.sh")
+window { background: transparent; }
 
-(defpoll gpu :interval "2s" :initial ""
-  "~/.config/eww/scripts/gpu.sh")
+.bar { padding: $margin; }
 
-(deflisten vol :initial '{"level":0,"muted":false,"icon":"volume-low","label":"0%"}'
-  "~/.config/eww/scripts/volume.sh")
+.pill {
+  background: $bg;
+  border: $border solid $line;
+  border-radius: 16px;
+  padding: $padding;
+}
 
-(defpoll net :interval "3s" :initial "wifi-off"
-  "~/.config/eww/scripts/network.sh")
+// ---- workspaces: focused one is a white circle with a black number ----
+.ws {
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 9px;
+}
+.ws.empty    { color: $disabled; }
+.ws.occupied { color: $fg; }
+.ws.urgent   { background: $alert; color: $primary; }
+.ws.focused  { background: $primary; color: $bg; }
 
-(defpoll media_status :interval "1s" :initial ""
-  "playerctl status 2>/dev/null")
+// ---- stats ----
+.stat-value   { min-width: 24px; }   // keeps the pill from jittering at 9% -> 10%
+.volume-value { min-width: 32px; }
 
-(defpoll media_track :interval "2s" :initial ""
-  "playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null")
+// ---- buttons ----
+.btn {
+  padding: 1px 3px;
+  border-radius: 9px;
+}
+.btn:hover { background: $hover; }
+.volume.muted label { color: $muted; }
 
-;; 4 bars, 0-100 each, e.g. [12,45,78,33]  (config: cava.conf)
-(deflisten viz :initial "[0,0,0,0]"
-  "~/.config/eww/scripts/viz.sh")
+// ---- visualizer ----
+.viz-bar trough {
+  min-width: 3px;
+  min-height: 14px;
+  background: $disabled;
+  border-radius: 2px;
+}
+.viz-bar progress {
+  min-width: 3px;
+  background: $fg;
+  border-radius: 2px;
+}
 
-;; ---------- building blocks ----------
-(defwidget svg [name]
-  (image :class "icon"
-         :path "${EWW_CONFIG_DIR}/icons/${name}.svg"
-         :image-width 16
-         :image-height 16))
-
-(defwidget icon-button [icon cmd]
-  (eventbox :class "btn" :cursor "pointer" :onclick cmd
-    (svg :name icon)))
-
-(defwidget stat [icon value show]
-  (box :class "stat" :orientation "h" :space-evenly false :spacing 5
-       :valign "center" :visible show
-    (svg :name icon)
-    (label :class "stat-value" :xalign 0 :text value)))
-
-;; ---------- left: workspaces · ram cpu swap gpu · window title ----------
-(defwidget workspace-list []
-  (box :class "workspaces" :orientation "h" :space-evenly false :valign "center"
-    (for ws in workspaces
-      (eventbox :cursor "pointer"
-                :onclick "bspc desktop -f ${ws.name}"
-        (label :class "ws ${ws.state}" :text "${ws.name}")))))
-
-(defwidget left-pill []
-  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
-       :halign "start" :valign "fill"
-    (workspace-list)
-    (box :class "stats" :orientation "h" :space-evenly false :spacing 10 :valign "center"
-      (stat :icon "ram"
-            :value "${round(EWW_RAM.used_mem_perc, 0)}%"
-            :show true)
-      (stat :icon "cpu"
-            :value "${round(EWW_CPU.avg, 0)}%"
-            :show true)
-      (stat :icon "swap"
-            :value "${EWW_RAM.total_swap > 0 ? round((EWW_RAM.total_swap - EWW_RAM.free_swap) * 100 / EWW_RAM.total_swap, 0) : 0}%"
-            :show {EWW_RAM.total_swap > 0})
-      (stat :icon "gpu"
-            :value "${gpu}%"
-            :show {gpu != ""}))
-    (label :class "app" :visible {app != ""}
-           :truncate true :limit-width 24 :text app)))
-
-;; ---------- center: day · date · time ----------
-(defwidget center-pill []
-  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
-       :halign "center" :valign "fill"
-    (label :class "day"  :text {clock.day})
-    (label :class "date" :text {clock.date})
-    (label :class "time" :text {clock.time})))
-
-;; ---------- right: media · volume · network · tray ----------
-(defwidget visualizer []
-  (box :class "viz" :orientation "h" :space-evenly false :spacing 2 :valign "center"
-       :visible {media_status == "Playing"}
-    (for v in viz
-      (progress :class "viz-bar" :orientation "v" :flipped true :value v))))
-
-(defwidget media []
-  (box :class "media" :orientation "h" :space-evenly false :spacing 5 :valign "center"
-       :visible {media_status == "Playing" || media_status == "Paused"}
-       :tooltip media_track
-    (visualizer)
-    (icon-button :icon "skip-previous" :cmd "playerctl previous")
-    (icon-button :icon {media_status == "Playing" ? "pause" : "play"}
-                 :cmd "playerctl play-pause; sleep 0.15; ${EWW_CMD} poll media_status")
-    (icon-button :icon "skip-next" :cmd "playerctl next")))
-
-(defwidget volume []
-  (eventbox :class "btn" :cursor "pointer"
-            :onclick "pactl set-sink-mute @DEFAULT_SINK@ toggle"
-            :onrightclick "pavucontrol"
-            :onscroll "~/.config/eww/scripts/volume.sh {}"
-    (box :class "volume ${vol.muted ? 'muted' : ''}" :orientation "h" :space-evenly false
-         :spacing 5 :valign "center"
-      (svg :name {vol.icon})
-      (label :class "volume-value" :xalign 0 :text {vol.label}))))
-
-(defwidget network []
-  (box :class "network" :valign "center"
-    (svg :name net)))
-
-(defwidget right-pill []
-  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
-       :halign "end" :valign "fill"
-    (box :class "indicators" :orientation "h" :space-evenly false :spacing 10 :valign "center"
-      (media)
-      (volume)
-      (network))
-    (systray :class "tray" :spacing 5 :icon-size 16 :prepend-new false)))
-
-;; ---------- window ----------
-(defwindow bar
-  :monitor 0
-  :stacking "bg"
-  :windowtype "desktopcd"
-  :reserve (struts :side "top" :distance "42px")
-  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "42px" :anchor "top center")
-  (centerbox :class "bar" :orientation "h"
-    (left-pill)
-    (center-pill)
-    (right-pill)))
+// ---- system tray ----
+.tray menuitem {
+  padding: 1px;
+  border-radius: 9px;
+}
+.tray menuitem:hover { background: $hover; }
