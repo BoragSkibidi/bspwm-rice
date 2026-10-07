@@ -34,14 +34,9 @@ copyq &
 
 chmod +x ~/.local/bin/bspc-switch-anim &
 chmod +x ~/.config/bspwm/scripts/switch_workspace.sh &
-chmod +x ~/.config/polybar/scripts/network.sh &
-chmod +x ~/.config/polybar/scripts/nowPlaying.sh &
-chmod +x ~/.config/polybar/scripts/nowPlayingLauncher.sh &
-chmod +x ~/.config/polybar/scripts/status.sh &
 
-polybar first &
-polybar center &
-polybar right &
+eww daemon &
+eww open bar &
 
 
 # start up softwares

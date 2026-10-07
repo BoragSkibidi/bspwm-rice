@@ -1,0 +1,171 @@
+$bg:       #000000;
+$fg:       #757575;
+$primary:  #ffffff;
+$border:   #393939;
+$alert:    #8a0000;
+$disabled: #202020;
+$muted:    #666666;
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 10pt;
+  color: $fg;
+}
+
+window {
+  background: transparent;
+}
+
+// Floating pill roots; each root sizes itself to its visible contents.
+.bar {
+  margin: 5px;
+  padding: 5px;
+  background: $bg;
+  border: 2px solid $border;
+  border-radius: 999px;
+}
+
+.bar.left {
+  padding-left: 5px;
+}
+
+.bar.center {
+  padding: 5px 10px;
+}
+
+.bar.right {
+  padding-right: 5px;
+}
+
+// Workspace selector
+.workspaces {
+  padding: 0 5px;
+}
+
+.ws {
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 999px;
+  color: $fg;
+}
+
+.ws.empty {
+  color: $disabled;
+}
+
+.ws.occupied {
+  color: $fg;
+}
+
+.ws.urgent {
+  background: $alert;
+  color: $primary;
+}
+
+.ws.focused {
+  background: $primary;
+  color: $bg;
+}
+
+// Compact system readings and the active window title
+.stats {
+  padding: 0 5px;
+}
+
+.stat {
+  padding: 0 3px;
+}
+
+.stat.label,
+.stat-label {
+  color: $muted;
+}
+
+.stat.value,
+.stat-value {
+  color: $fg;
+}
+
+.window-title {
+  padding: 0 5px;
+  color: $primary;
+}
+
+// Center clock
+.clock {
+  padding: 0 5px;
+}
+
+.clock .day {
+  color: $muted;
+}
+
+.clock .date {
+  color: $fg;
+}
+
+.clock .time {
+  color: $primary;
+}
+
+// Media controls stay content-sized; an empty player can be hidden by its widget.
+.media {
+  padding: 0 5px;
+}
+
+.media-button {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  color: $fg;
+}
+
+.media-button:hover {
+  background: $disabled;
+  color: $primary;
+}
+
+.media-button.play-pause {
+  background: $border;
+  color: $primary;
+}
+
+.visualizer {
+  min-height: 18px;
+  padding: 0 3px;
+}
+
+.visualizer-bar {
+  min-width: 2px;
+  min-height: 3px;
+  margin: 0 1px;
+  background: $muted;
+  border-radius: 2px;
+}
+
+.visualizer.playing .visualizer-bar {
+  background: $primary;
+}
+
+// Background application indicators
+.system-tray,
+.tray {
+  padding: 0 5px;
+}
+
+.tray-icon {
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0 3px;
+  color: $fg;
+}
+
+.tray-icon.active {
+  color: $primary;
+}
+
+.volume.muted label {
+  color: $muted;
+}

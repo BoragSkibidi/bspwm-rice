@@ -1,0 +1,107 @@
+;; ---------- data ----------
+(defpoll day :interval "1m" "date '+%A'")
+(defpoll date :interval "1m" "date '+%d %B %Y'")
+(defpoll clock :interval "100ms" "date '+%H:%M:%S:%3N'")
+
+(defpoll swap :interval "5s" :initial "0%"
+  "free -b | awk '/^Swap:/ { if ($2 == 0) print \"0%\"; else printf \"%.0f%%\", 100 * $3 / $2 }'")
+
+(defpoll gpu :interval "2s" :initial "N/A"
+  "for f in /sys/class/drm/card[0-9]*/device/gpu_busy_percent; do if [ -r \"$f\" ]; then value=$(cat \"$f\"); printf '%s%%' \"$value\"; exit; fi; done; value=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -n1); if [ -n \"$value\" ]; then printf '%s%%' \"$value\"; else printf 'N/A'; fi")
+
+(defpoll window-title :interval "500ms" :initial "Desktop"
+  "xdotool getwindowfocus getwindowname 2>/dev/null || printf 'Desktop'")
+
+(deflisten workspaces :initial "[]"
+  "~/.config/eww/scripts/workspaces.sh")
+
+(deflisten media :initial '{"status":"none","icon":"play","text":""}'
+  "~/.config/eww/scripts/nowplaying.sh")
+
+;; ---------- small building blocks ----------
+(defwidget stat [icon value]
+  (box :class "stat" :orientation "h" :space-evenly false :spacing 4 :valign "center"
+    (label :class "stat-icon" :text icon)
+    (label :class "stat-value" :text value)))
+
+(defwidget workspace-list []
+  (box :class "workspaces" :orientation "h" :space-evenly false :valign "center"
+    (for ws in workspaces
+      (eventbox :cursor "pointer"
+                :onclick "bspc desktop -f ${ws.name}"
+        (label :class "ws ${ws.state}" :text "${ws.name}")))))
+
+;; ---------- left: workspaces, system use, focused window ----------
+(defwidget left-bar []
+  (box :class "bar left" :orientation "h" :space-evenly false :valign "center" :spacing 5
+    (workspace-list)
+    (box :class "stats" :orientation "h" :space-evenly false :spacing 5 :valign "center"
+      (stat :icon "" :value "${round(EWW_CPU.avg, 0)}%")
+      (stat :icon "" :value "${round(EWW_RAM.used_mem_perc, 0)}%")
+      (stat :icon "󰓅" :value swap)
+      (stat :icon "󰢮" :value gpu))
+    (label :class "window-title" :text window-title)))
+
+;; ---------- center: day, date, and precise time ----------
+(defwidget center-bar []
+  (box :class "bar center clock" :orientation "h" :space-evenly false :spacing 8 :valign "center"
+    (label :class "day" :text day)
+    (label :class "date" :text date)
+    (label :class "time" :text clock)))
+
+;; ---------- right: media controls and background applications ----------
+(defwidget nowplaying []
+  (box :class "media ${media.status == 'playing' ? 'playing' : ''}"
+       :visible {media.status != "none"}
+       :orientation "h"
+       :space-evenly false
+       :spacing 3
+       :valign "center"
+    (eventbox :cursor "pointer" :onclick "playerctl previous"
+      (label :class "media-button" :text "󰒮"))
+    (eventbox :cursor "pointer" :onclick "playerctl play-pause"
+      (label :class "media-button play-pause"
+             :text {media.status == "playing" ? "󰏤" : "󰐊"}))
+    (box :class "visualizer ${media.status == 'playing' ? 'playing' : ''}"
+         :visible {media.status == "playing"}
+         :orientation "h"
+         :space-evenly false
+         :spacing 1
+         :valign "center"
+      (label :class "visualizer-bar" :text "▂")
+      (label :class "visualizer-bar" :text "▅")
+      (label :class "visualizer-bar" :text "▃")
+      (label :class "visualizer-bar" :text "▆")
+      (label :class "visualizer-bar" :text "▂"))
+    (eventbox :cursor "pointer" :onclick "playerctl next"
+      (label :class "media-button" :text "󰒭"))))
+
+(defwidget right-bar []
+  (box :class "bar right" :orientation "h" :space-evenly false :spacing 5 :valign "center"
+    (nowplaying)
+    (systray :class "system-tray" :spacing 5)))
+
+;; Natural window dimensions let each pill fit its visible widgets.
+(defwindow bar-left
+  :monitor 0
+  :stacking "fg"
+  :windowtype "dock"
+  :reserve (struts :side "top" :distance "44px")
+  :geometry (geometry :x "5px" :y "5px" :anchor "top left")
+  (left-bar))
+
+(defwindow bar-center
+  :monitor 0
+  :stacking "fg"
+  :windowtype "dock"
+  :reserve (struts :side "top" :distance "44px")
+  :geometry (geometry :x "0px" :y "5px" :anchor "top center")
+  (center-bar))
+
+(defwindow bar-right
+  :monitor 0
+  :stacking "fg"
+  :windowtype "dock"
+  :reserve (struts :side "top" :distance "44px")
+  :geometry (geometry :x "5px" :y "5px" :anchor "top right")
+  (right-bar))
