@@ -22,7 +22,7 @@
 
 set -u
 
-DURATION="${WS_SLIDE_DURATION:-0.3}"
+DURATION="${WS_SLIDE_DURATION:-0.2}"
 STATE="${XDG_RUNTIME_DIR:-/tmp}/bspc-switch-anim.gen"
 
 mode="${1:-}"

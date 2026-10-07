@@ -51,5 +51,5 @@ discord --start-minimized &
 # mouse
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile" 0 1
-ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 650
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 625
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000
