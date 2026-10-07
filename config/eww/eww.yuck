@@ -1,29 +1,61 @@
+;; ---------------------------------------------------------------
+;;  eww bar  (bspwm / X11)
+;;  one transparent window across the top, three content-sized pills:
+;;    left   [workspaces] [ram cpu swap gpu] [app name]
+;;    center [day] [date] [time:ms]
+;;    right  [media · volume · network] [system tray]
+;;  start with:  ~/.config/eww/launch.sh   (or: eww daemon && eww open bar)
+;;  sizes live in eww.scss ($margin, $padding); keep the window height below in sync
+;;  (pill 32px + 2 * margin = 42px)
+;; ---------------------------------------------------------------
+
 ;; ---------- data ----------
-(defpoll day :interval "1m" "date '+%A'")
-(defpoll date :interval "1m" "date '+%d %B %Y'")
-(defpoll clock :interval "100ms" "date '+%H:%M:%S:%3N'")
-
-(defpoll swap :interval "5s" :initial "0%"
-  "free -b | awk '/^Swap:/ { if ($2 == 0) print \"0%\"; else printf \"%.0f%%\", 100 * $3 / $2 }'")
-
-(defpoll gpu :interval "2s" :initial "N/A"
-  "for f in /sys/class/drm/card[0-9]*/device/gpu_busy_percent; do if [ -r \"$f\" ]; then value=$(cat \"$f\"); printf '%s%%' \"$value\"; exit; fi; done; value=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -n1); if [ -n \"$value\" ]; then printf '%s%%' \"$value\"; else printf 'N/A'; fi")
-
-(defpoll window-title :interval "500ms" :initial "Desktop"
-  "xdotool getwindowfocus getwindowname 2>/dev/null || printf 'Desktop'")
+(deflisten clock :initial '{"day":"","date":"","time":""}'
+  "~/.config/eww/scripts/clock.sh")
 
 (deflisten workspaces :initial "[]"
   "~/.config/eww/scripts/workspaces.sh")
 
-(deflisten media :initial '{"status":"none","icon":"play","text":""}'
-  "~/.config/eww/scripts/nowplaying.sh")
+(deflisten app :initial ""
+  "~/.config/eww/scripts/app.sh")
 
-;; ---------- small building blocks ----------
-(defwidget stat [icon value]
-  (box :class "stat" :orientation "h" :space-evenly false :spacing 4 :valign "center"
-    (label :class "stat-icon" :text icon)
-    (label :class "stat-value" :text value)))
+(defpoll gpu :interval "2s" :initial ""
+  "~/.config/eww/scripts/gpu.sh")
 
+(deflisten vol :initial '{"level":0,"muted":false,"icon":"volume-low","label":"0%"}'
+  "~/.config/eww/scripts/volume.sh")
+
+(defpoll net :interval "3s" :initial "wifi-off"
+  "~/.config/eww/scripts/network.sh")
+
+(defpoll media_status :interval "1s" :initial ""
+  "playerctl status 2>/dev/null")
+
+(defpoll media_track :interval "2s" :initial ""
+  "playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null")
+
+;; 4 bars, 0-100 each, e.g. [12,45,78,33]  (config: cava.conf)
+(deflisten viz :initial "[0,0,0,0]"
+  "~/.config/eww/scripts/viz.sh")
+
+;; ---------- building blocks ----------
+(defwidget svg [name]
+  (image :class "icon"
+         :path "${EWW_CONFIG_DIR}/icons/${name}.svg"
+         :image-width 16
+         :image-height 16))
+
+(defwidget icon-button [icon cmd]
+  (eventbox :class "btn" :cursor "pointer" :onclick cmd
+    (svg :name icon)))
+
+(defwidget stat [icon value show]
+  (box :class "stat" :orientation "h" :space-evenly false :spacing 5
+       :valign "center" :visible show
+    (svg :name icon)
+    (label :class "stat-value" :xalign 0 :text value)))
+
+;; ---------- left: workspaces · ram cpu swap gpu · window title ----------
 (defwidget workspace-list []
   (box :class "workspaces" :orientation "h" :space-evenly false :valign "center"
     (for ws in workspaces
@@ -31,77 +63,82 @@
                 :onclick "bspc desktop -f ${ws.name}"
         (label :class "ws ${ws.state}" :text "${ws.name}")))))
 
-;; ---------- left: workspaces, system use, focused window ----------
-(defwidget left-bar []
-  (box :class "bar left" :orientation "h" :space-evenly false :valign "center" :spacing 5
+(defwidget left-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "start" :valign "fill"
     (workspace-list)
-    (box :class "stats" :orientation "h" :space-evenly false :spacing 5 :valign "center"
-      (stat :icon "" :value "${round(EWW_CPU.avg, 0)}%")
-      (stat :icon "" :value "${round(EWW_RAM.used_mem_perc, 0)}%")
-      (stat :icon "󰓅" :value swap)
-      (stat :icon "󰢮" :value gpu))
-    (label :class "window-title" :text window-title)))
+    (box :class "stats" :orientation "h" :space-evenly false :spacing 10 :valign "center"
+      (stat :icon "ram"
+            :value "${round(EWW_RAM.used_mem_perc, 0)}%"
+            :show true)
+      (stat :icon "cpu"
+            :value "${round(EWW_CPU.avg, 0)}%"
+            :show true)
+      (stat :icon "swap"
+            :value "${EWW_RAM.total_swap > 0 ? round((EWW_RAM.total_swap - EWW_RAM.free_swap) * 100 / EWW_RAM.total_swap, 0) : 0}%"
+            :show {EWW_RAM.total_swap > 0})
+      (stat :icon "gpu"
+            :value "${gpu}%"
+            :show {gpu != ""}))
+    (label :class "app" :visible {app != ""}
+           :truncate true :limit-width 24 :text app)))
 
-;; ---------- center: day, date, and precise time ----------
-(defwidget center-bar []
-  (box :class "bar center clock" :orientation "h" :space-evenly false :spacing 8 :valign "center"
-    (label :class "day" :text day)
-    (label :class "date" :text date)
-    (label :class "time" :text clock)))
+;; ---------- center: day · date · time ----------
+(defwidget center-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "center" :valign "fill"
+    (label :class "day"  :text {clock.day})
+    (label :class "date" :text {clock.date})
+    (label :class "time" :text {clock.time})))
 
-;; ---------- right: media controls and background applications ----------
-(defwidget nowplaying []
-  (box :class "media ${media.status == 'playing' ? 'playing' : ''}"
-       :visible {media.status != "none"}
-       :orientation "h"
-       :space-evenly false
-       :spacing 3
-       :valign "center"
-    (eventbox :cursor "pointer" :onclick "playerctl previous"
-      (label :class "media-button" :text "󰒮"))
-    (eventbox :cursor "pointer" :onclick "playerctl play-pause"
-      (label :class "media-button play-pause"
-             :text {media.status == "playing" ? "󰏤" : "󰐊"}))
-    (box :class "visualizer ${media.status == 'playing' ? 'playing' : ''}"
-         :visible {media.status == "playing"}
-         :orientation "h"
-         :space-evenly false
-         :spacing 1
-         :valign "center"
-      (label :class "visualizer-bar" :text "▂")
-      (label :class "visualizer-bar" :text "▅")
-      (label :class "visualizer-bar" :text "▃")
-      (label :class "visualizer-bar" :text "▆")
-      (label :class "visualizer-bar" :text "▂"))
-    (eventbox :cursor "pointer" :onclick "playerctl next"
-      (label :class "media-button" :text "󰒭"))))
+;; ---------- right: media · volume · network · tray ----------
+(defwidget visualizer []
+  (box :class "viz" :orientation "h" :space-evenly false :spacing 2 :valign "center"
+       :visible {media_status == "Playing"}
+    (for v in viz
+      (progress :class "viz-bar" :orientation "v" :flipped true :value v))))
 
-(defwidget right-bar []
-  (box :class "bar right" :orientation "h" :space-evenly false :spacing 5 :valign "center"
-    (nowplaying)
-    (systray :class "system-tray" :spacing 5)))
+(defwidget media []
+  (box :class "media" :orientation "h" :space-evenly false :spacing 5 :valign "center"
+       :visible {media_status == "Playing" || media_status == "Paused"}
+       :tooltip media_track
+    (visualizer)
+    (icon-button :icon "skip-previous" :cmd "playerctl previous")
+    (icon-button :icon {media_status == "Playing" ? "pause" : "play"}
+                 :cmd "playerctl play-pause; sleep 0.15; ${EWW_CMD} poll media_status")
+    (icon-button :icon "skip-next" :cmd "playerctl next")))
 
-;; Natural window dimensions let each pill fit its visible widgets.
-(defwindow bar-left
+(defwidget volume []
+  (eventbox :class "btn" :cursor "pointer"
+            :onclick "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+            :onrightclick "pavucontrol"
+            :onscroll "~/.config/eww/scripts/volume.sh {}"
+    (box :class "volume ${vol.muted ? 'muted' : ''}" :orientation "h" :space-evenly false
+         :spacing 5 :valign "center"
+      (svg :name {vol.icon})
+      (label :class "volume-value" :xalign 0 :text {vol.label}))))
+
+(defwidget network []
+  (box :class "network" :valign "center"
+    (svg :name net)))
+
+(defwidget right-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "end" :valign "fill"
+    (box :class "indicators" :orientation "h" :space-evenly false :spacing 10 :valign "center"
+      (media)
+      (volume)
+      (network))
+    (systray :class "tray" :spacing 5 :icon-size 16 :prepend-new false)))
+
+;; ---------- window ----------
+(defwindow bar
   :monitor 0
-  :stacking "fg"
-  :windowtype "dock"
-  :reserve (struts :side "top" :distance "44px")
-  :geometry (geometry :x "5px" :y "5px" :anchor "top left")
-  (left-bar))
-
-(defwindow bar-center
-  :monitor 0
-  :stacking "fg"
-  :windowtype "dock"
-  :reserve (struts :side "top" :distance "44px")
-  :geometry (geometry :x "0px" :y "5px" :anchor "top center")
-  (center-bar))
-
-(defwindow bar-right
-  :monitor 0
-  :stacking "fg"
-  :windowtype "dock"
-  :reserve (struts :side "top" :distance "44px")
-  :geometry (geometry :x "5px" :y "5px" :anchor "top right")
-  (right-bar))
+  :stacking "bg"
+  :windowtype "desktopcd"
+  :reserve (struts :side "top" :distance "42px")
+  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "42px" :anchor "top center")
+  (centerbox :class "bar" :orientation "h"
+    (left-pill)
+    (center-pill)
+    (right-pill)))

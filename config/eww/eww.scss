@@ -1,171 +1,144 @@
-$bg:       #000000;
-$fg:       #757575;
-$primary:  #ffffff;
-$border:   #393939;
-$alert:    #8a0000;
-$disabled: #202020;
-$muted:    #666666;
+;; ---------------------------------------------------------------
+;;  eww bar  (bspwm / X11)
+;;  one transparent window across the top, three content-sized pills:
+;;    left   [workspaces] [ram cpu swap gpu] [app name]
+;;    center [day] [date] [time:ms]
+;;    right  [media · volume · network] [system tray]
+;;  start with:  ~/.config/eww/launch.sh   (or: eww daemon && eww open bar)
+;;  sizes live in eww.scss ($margin, $padding); keep the window height below in sync
+;;  (pill 32px + 2 * margin = 42px)
+;; ---------------------------------------------------------------
 
-* {
-  all: unset;
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 10pt;
-  color: $fg;
-}
+;; ---------- data ----------
+(deflisten clock :initial '{"day":"","date":"","time":""}'
+  "~/.config/eww/scripts/clock.sh")
 
-window {
-  background: transparent;
-}
+(deflisten workspaces :initial "[]"
+  "~/.config/eww/scripts/workspaces.sh")
 
-// Floating pill roots; each root sizes itself to its visible contents.
-.bar {
-  margin: 5px;
-  padding: 5px;
-  background: $bg;
-  border: 2px solid $border;
-  border-radius: 999px;
-}
+(deflisten app :initial ""
+  "~/.config/eww/scripts/app.sh")
 
-.bar.left {
-  padding-left: 5px;
-}
+(defpoll gpu :interval "2s" :initial ""
+  "~/.config/eww/scripts/gpu.sh")
 
-.bar.center {
-  padding: 5px 10px;
-}
+(deflisten vol :initial '{"level":0,"muted":false,"icon":"volume-low","label":"0%"}'
+  "~/.config/eww/scripts/volume.sh")
 
-.bar.right {
-  padding-right: 5px;
-}
+(defpoll net :interval "3s" :initial "wifi-off"
+  "~/.config/eww/scripts/network.sh")
 
-// Workspace selector
-.workspaces {
-  padding: 0 5px;
-}
+(defpoll media_status :interval "1s" :initial ""
+  "playerctl status 2>/dev/null")
 
-.ws {
-  min-width: 20px;
-  min-height: 20px;
-  border-radius: 999px;
-  color: $fg;
-}
+(defpoll media_track :interval "2s" :initial ""
+  "playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null")
 
-.ws.empty {
-  color: $disabled;
-}
+;; 4 bars, 0-100 each, e.g. [12,45,78,33]  (config: cava.conf)
+(deflisten viz :initial "[0,0,0,0]"
+  "~/.config/eww/scripts/viz.sh")
 
-.ws.occupied {
-  color: $fg;
-}
+;; ---------- building blocks ----------
+(defwidget svg [name]
+  (image :class "icon"
+         :path "${EWW_CONFIG_DIR}/icons/${name}.svg"
+         :image-width 16
+         :image-height 16))
 
-.ws.urgent {
-  background: $alert;
-  color: $primary;
-}
+(defwidget icon-button [icon cmd]
+  (eventbox :class "btn" :cursor "pointer" :onclick cmd
+    (svg :name icon)))
 
-.ws.focused {
-  background: $primary;
-  color: $bg;
-}
+(defwidget stat [icon value show]
+  (box :class "stat" :orientation "h" :space-evenly false :spacing 5
+       :valign "center" :visible show
+    (svg :name icon)
+    (label :class "stat-value" :xalign 0 :text value)))
 
-// Compact system readings and the active window title
-.stats {
-  padding: 0 5px;
-}
+;; ---------- left: workspaces · ram cpu swap gpu · window title ----------
+(defwidget workspace-list []
+  (box :class "workspaces" :orientation "h" :space-evenly false :valign "center"
+    (for ws in workspaces
+      (eventbox :cursor "pointer"
+                :onclick "bspc desktop -f ${ws.name}"
+        (label :class "ws ${ws.state}" :text "${ws.name}")))))
 
-.stat {
-  padding: 0 3px;
-}
+(defwidget left-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "start" :valign "fill"
+    (workspace-list)
+    (box :class "stats" :orientation "h" :space-evenly false :spacing 10 :valign "center"
+      (stat :icon "ram"
+            :value "${round(EWW_RAM.used_mem_perc, 0)}%"
+            :show true)
+      (stat :icon "cpu"
+            :value "${round(EWW_CPU.avg, 0)}%"
+            :show true)
+      (stat :icon "swap"
+            :value "${EWW_RAM.total_swap > 0 ? round((EWW_RAM.total_swap - EWW_RAM.free_swap) * 100 / EWW_RAM.total_swap, 0) : 0}%"
+            :show {EWW_RAM.total_swap > 0})
+      (stat :icon "gpu"
+            :value "${gpu}%"
+            :show {gpu != ""}))
+    (label :class "app" :visible {app != ""}
+           :truncate true :limit-width 24 :text app)))
 
-.stat.label,
-.stat-label {
-  color: $muted;
-}
+;; ---------- center: day · date · time ----------
+(defwidget center-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "center" :valign "fill"
+    (label :class "day"  :text {clock.day})
+    (label :class "date" :text {clock.date})
+    (label :class "time" :text {clock.time})))
 
-.stat.value,
-.stat-value {
-  color: $fg;
-}
+;; ---------- right: media · volume · network · tray ----------
+(defwidget visualizer []
+  (box :class "viz" :orientation "h" :space-evenly false :spacing 2 :valign "center"
+       :visible {media_status == "Playing"}
+    (for v in viz
+      (progress :class "viz-bar" :orientation "v" :flipped true :value v))))
 
-.window-title {
-  padding: 0 5px;
-  color: $primary;
-}
+(defwidget media []
+  (box :class "media" :orientation "h" :space-evenly false :spacing 5 :valign "center"
+       :visible {media_status == "Playing" || media_status == "Paused"}
+       :tooltip media_track
+    (visualizer)
+    (icon-button :icon "skip-previous" :cmd "playerctl previous")
+    (icon-button :icon {media_status == "Playing" ? "pause" : "play"}
+                 :cmd "playerctl play-pause; sleep 0.15; ${EWW_CMD} poll media_status")
+    (icon-button :icon "skip-next" :cmd "playerctl next")))
 
-// Center clock
-.clock {
-  padding: 0 5px;
-}
+(defwidget volume []
+  (eventbox :class "btn" :cursor "pointer"
+            :onclick "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+            :onrightclick "pavucontrol"
+            :onscroll "~/.config/eww/scripts/volume.sh {}"
+    (box :class "volume ${vol.muted ? 'muted' : ''}" :orientation "h" :space-evenly false
+         :spacing 5 :valign "center"
+      (svg :name {vol.icon})
+      (label :class "volume-value" :xalign 0 :text {vol.label}))))
 
-.clock .day {
-  color: $muted;
-}
+(defwidget network []
+  (box :class "network" :valign "center"
+    (svg :name net)))
 
-.clock .date {
-  color: $fg;
-}
+(defwidget right-pill []
+  (box :class "pill" :orientation "h" :space-evenly false :spacing 10
+       :halign "end" :valign "fill"
+    (box :class "indicators" :orientation "h" :space-evenly false :spacing 10 :valign "center"
+      (media)
+      (volume)
+      (network))
+    (systray :class "tray" :spacing 5 :icon-size 16 :prepend-new false)))
 
-.clock .time {
-  color: $primary;
-}
-
-// Media controls stay content-sized; an empty player can be hidden by its widget.
-.media {
-  padding: 0 5px;
-}
-
-.media-button {
-  min-width: 22px;
-  min-height: 22px;
-  padding: 0 5px;
-  border-radius: 999px;
-  color: $fg;
-}
-
-.media-button:hover {
-  background: $disabled;
-  color: $primary;
-}
-
-.media-button.play-pause {
-  background: $border;
-  color: $primary;
-}
-
-.visualizer {
-  min-height: 18px;
-  padding: 0 3px;
-}
-
-.visualizer-bar {
-  min-width: 2px;
-  min-height: 3px;
-  margin: 0 1px;
-  background: $muted;
-  border-radius: 2px;
-}
-
-.visualizer.playing .visualizer-bar {
-  background: $primary;
-}
-
-// Background application indicators
-.system-tray,
-.tray {
-  padding: 0 5px;
-}
-
-.tray-icon {
-  min-width: 20px;
-  min-height: 20px;
-  padding: 0 3px;
-  color: $fg;
-}
-
-.tray-icon.active {
-  color: $primary;
-}
-
-.volume.muted label {
-  color: $muted;
-}
+;; ---------- window ----------
+(defwindow bar
+  :monitor 0
+  :stacking "bg"
+  :windowtype "desktopcd"
+  :reserve (struts :side "top" :distance "42px")
+  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "42px" :anchor "top center")
+  (centerbox :class "bar" :orientation "h"
+    (left-pill)
+    (center-pill)
+    (right-pill)))

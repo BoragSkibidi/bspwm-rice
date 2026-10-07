@@ -14,10 +14,7 @@ bspc config borderless_monocle true
 bspc config gapless_monocle true
 bspc config corner_radius 4
 
-
 bspc config focus_follows_pointer true
-
-
 
 # Auto Start
 /usr/lib/polkit-kde-authentication-agent-1 &
@@ -35,8 +32,7 @@ copyq &
 chmod +x ~/.local/bin/bspc-switch-anim &
 chmod +x ~/.config/bspwm/scripts/switch_workspace.sh &
 
-eww daemon &
-eww open bar &
+
 
 
 # start up softwares
@@ -48,3 +44,6 @@ xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile" 0 1
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 625
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000
+
+
+eww daemon && eww open bar &
