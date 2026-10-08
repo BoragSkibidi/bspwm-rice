@@ -60,7 +60,7 @@
   (box :class "workspaces" :orientation "h" :space-evenly false :valign "center"
     (for ws in workspaces
       (eventbox :cursor "pointer"
-                :onclick "bspc desktop -f ${ws.name}"
+                :onclick "bspc-switch-anim switch ${ws.name}"
         (label :class "ws ${ws.state}" :text "${ws.name}")))))
 
 (defwidget left-pill []
@@ -135,7 +135,10 @@
 (defwindow bar
   :monitor 0
   :stacking "bg"
-  :windowtype "desktopcd"
+  :windowtype "desktop"
+  :focusable true
+  :wm-ignore false
+  :exclusive true
   :reserve (struts :side "top" :distance "42px")
   :geometry (geometry :x "0%" :y "0px" :width "100%" :height "42px" :anchor "top center")
   (centerbox :class "bar" :orientation "h"
