@@ -53,6 +53,8 @@ super + d
 super + g
 	bspc query -N -n focused.pseudo_tiled > /dev/null && bspc node -t tiled || bspc node -t pseudo_tiled
 
+super + d
+	bspc query -N -n focused.sticky > /dev/null && bspc node -t tiled || bspc node -t sticky
 
 
 #
