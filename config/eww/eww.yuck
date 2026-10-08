@@ -28,10 +28,10 @@
 (defpoll net :interval "3s" :initial "wifi-off"
   "~/.config/eww/scripts/network.sh")
 
-(defpoll media_status :interval "1s" :initial ""
-  "playerctl status 2>/dev/null")
+(defpoll media_status :interval "500ms" :initial ""
+  "playerctl status 2>/dev/null || true")
 
-(defpoll media_track :interval "2s" :initial ""
+(defpoll media_track :interval "1s" :initial ""
   "playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null")
 
 ;; 4 bars, 0-100 each, e.g. [12,45,78,33]  (config: cava.conf)
@@ -68,18 +68,18 @@
        :halign "start" :valign "fill"
     (workspace-list)
     (box :class "stats" :orientation "h" :space-evenly false :spacing 10 :valign "center"
-      (stat :icon "ram"
-            :value "${round(EWW_RAM.used_mem_perc, 0)}%"
-            :show true)
       (stat :icon "cpu"
             :value "${round(EWW_CPU.avg, 0)}%"
             :show true)
-      (stat :icon "swap"
-            :value "${EWW_RAM.total_swap > 0 ? round((EWW_RAM.total_swap - EWW_RAM.free_swap) * 100 / EWW_RAM.total_swap, 0) : 0}%"
-            :show {EWW_RAM.total_swap > 0})
       (stat :icon "gpu"
             :value "${gpu}%"
-            :show {gpu != ""}))
+            :show {gpu != ""})
+      (stat :icon "ram"
+            :value "${round(EWW_RAM.used_mem_perc, 0)}%"
+            :show true)
+      (stat :icon "swap"
+            :value "${EWW_RAM.total_swap > 0 ? round((EWW_RAM.total_swap - EWW_RAM.free_swap) * 100 / EWW_RAM.total_swap, 0) : 0}%"
+            :show {EWW_RAM.total_swap > 0}))
     (label :class "app" :visible {app != ""}
            :truncate true :limit-width 24 :text app)))
 
@@ -106,7 +106,8 @@
     (icon-button :icon "skip-previous" :cmd "playerctl previous")
     (icon-button :icon {media_status == "Playing" ? "pause" : "play"}
                  :cmd "playerctl play-pause; sleep 0.15; ${EWW_CMD} poll media_status")
-    (icon-button :icon "skip-next" :cmd "playerctl next")))
+    (icon-button :icon "skip-next" 
+                 :cmd "playerctl next")))
 
 (defwidget volume []
   (eventbox :class "btn" :cursor "pointer"
@@ -127,9 +128,9 @@
        :halign "end" :valign "fill"
     (box :class "indicators" :orientation "h" :space-evenly false :spacing 10 :valign "center"
       (media)
+    (systray :class "tray" :spacing 5 :icon-size 16 :prepend-new false)
       (volume)
-      (network))
-    (systray :class "tray" :spacing 5 :icon-size 16 :prepend-new false)))
+      (network))))
 
 ;; ---------- window ----------
 (defwindow bar

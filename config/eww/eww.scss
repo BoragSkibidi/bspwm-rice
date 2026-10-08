@@ -1,7 +1,9 @@
 // ---- sizes ----
-$margin:  5px;    // gap between the pills and the screen edge
-$padding: 5px;    // space between a pill's edge and its content
+$margin:  10px;    // gap between the pills and the screen edge
+$padding-h: 10px;
+$padding-v: 5px;
 $border:  2px;
+$spacer:  20px;
 // pill height = 18px content + 2 * $padding + 2 * $border = 32px
 // window height (eww.yuck) = pill + 2 * $margin = 42px
 
@@ -24,16 +26,22 @@ $muted:    #666666;
 
 window { background: transparent; }
 
-.bar { padding: $margin; }
+.bar { 
+  padding: $margin;
+}
 
 .pill {
   background: $bg;
   border: $border solid $line;
-  border-radius: 16px;
-  padding: $padding;
+  border-radius: 10px;
+  padding: $padding-v $padding-h;
 }
 
 // ---- workspaces: focused one is a white circle with a black number ----
+.workspaces {
+  margin-right: $spacer;
+}
+
 .ws {
   min-width: 18px;
   min-height: 18px;
@@ -44,10 +52,23 @@ window { background: transparent; }
 .ws.urgent   { background: $alert; color: $primary; }
 .ws.focused  { background: $primary; color: $bg; }
 
+.app {
+  margin-left: $spacer;
+}
+
+.day {
+  margin-right: $spacer;
+}
+.time {
+  margin-left: $spacer;
+}
+
+
+
 // ---- stats ----
 .stat-value   { min-width: 24px; }   // keeps the pill from jittering at 9% -> 10%
 .volume-value { min-width: 32px; }
-
+.swap { margin-left: $spacer; }
 // ---- buttons ----
 .btn {
   padding: 1px 3px;
@@ -55,6 +76,11 @@ window { background: transparent; }
 }
 .btn:hover { background: $hover; }
 .volume.muted label { color: $muted; }
+
+.media {
+  margin-right: $spacer;
+}
+
 
 // ---- visualizer ----
 .viz-bar trough {
@@ -70,6 +96,9 @@ window { background: transparent; }
 }
 
 // ---- system tray ----
+.tray {
+  margin-right: $spacer;
+}
 .tray menuitem {
   padding: 1px;
   border-radius: 9px;

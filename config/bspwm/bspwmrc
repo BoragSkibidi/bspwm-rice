@@ -29,11 +29,9 @@ dunst &
 unclutter --idle 2 &
 copyq &
 
-chmod +x ~/.local/bin/bspc-switch-anim &
-chmod +x ~/.config/bspwm/scripts/switch_workspace.sh &
 
-
-
+eww daemon && eww open bar &
+~/.config/eww/fullscreen.sh &
 
 # start up softwares
 steam -silent &
@@ -43,7 +41,7 @@ discord --start-minimized &
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile" 0 1
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 625
+# ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 813
+
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000
 
-
-eww daemon && eww open bar &
