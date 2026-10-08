@@ -9,7 +9,7 @@ parse() {
             o)     state=occupied ;;
             u)     state=urgent ;;
             f)     state=empty ;;
-            *)     continue ;;   # monitors (M/m) and layout/state/flags (L/T/G)
+            *)     continue ;;
         esac
         json+="{\"name\":\"$name\",\"state\":\"$state\"},"
     done
