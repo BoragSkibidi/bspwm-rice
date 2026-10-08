@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Prints the bspwm desktops as JSON every time bspwm reports a change:
-# [{"name":"1","state":"focused"},{"name":"2","state":"occupied"},...]
-# state = focused | occupied | urgent | empty
-# Reconnects by itself, so it also works if eww starts before bspwm is ready or bspwm restarts.
-
 parse() {
     local line=${1#W} item json=""
     local IFS=:

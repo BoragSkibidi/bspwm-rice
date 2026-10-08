@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-
 emit() {
     local class word out=""
     class=$(bspc query -T -n focused 2>/dev/null | grep -oP '"className":"\K[^"]*')
-    class=${class##*.}               # com.obsproject.Studio -> Studio
+    class=${class##*.}
     class=${class//[-_]/ }
     for word in $class; do out+="${word^} "; done
     printf '%s\n' "${out% }"

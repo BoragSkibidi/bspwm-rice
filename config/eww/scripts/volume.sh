@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# No argument : listen mode, prints JSON on every volume/mute change (for eww deflisten)
-#   {"level":103,"muted":false,"icon":"volume-high","label":"103%"}
-# up | down   : change the volume by 5% (capped at 150%), used by scroll on the widget
 
 SINK=@DEFAULT_SINK@
 MAX=150

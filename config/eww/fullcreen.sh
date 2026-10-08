@@ -1,5 +1,4 @@
 #!/bin/bash
-
 update_layer() {
     if bspc query -N -d focused -n .fullscreen.!hidden > /dev/null; then
         xdo lower -N "Eww"
