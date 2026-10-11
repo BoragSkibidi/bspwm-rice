@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-conf="$(dirname "$(readlink -f "$0")")/../cava.conf"
+conf="$HOME/.config/eww/cava.conf"
 
 while true; do
     cava -p "$conf" 2>/dev/null | sed -u 's/;$//; s/;/,/g; s/.*/[&]/'
