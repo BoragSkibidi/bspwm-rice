@@ -35,7 +35,8 @@ eww daemon && eww open bar &
 
 # start up softwares
 steam -silent &
-discord --start-minimized &
+vesktop --disable-gpu --start-minimized &
+# discord --start-minimized &
 
 # mouse
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5
