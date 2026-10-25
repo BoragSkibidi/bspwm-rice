@@ -1,0 +1,158 @@
+(defvar notification_app "")
+(defvar notification_urgency "")
+(defvar notification_summary "")
+(defvar notification_body "")
+
+(defpoll notification_history
+	:interval "2s"
+	:initial "[]"
+	"~/.config/eww/scripts/notification-history.sh"
+)
+
+(defwindow notification-popup
+	:monitor 0
+	:stacking "fg"
+	:windowtype "desktop"
+	:focusable false
+	:geometry (geometry
+		:x "12px"
+		:y "54px"
+		:width "380px"
+		:height "150px"
+		:anchor "top left"
+	)
+	(box
+		:class "notification-popup"
+		:orientation "v"
+		:space-evenly false
+		:spacing 6
+
+		(box
+			:class "notification-popup-header"
+			:orientation "h"
+			:space-evenly false
+			:hexpand true
+
+			(label
+				:class "notification-popup-app"
+				:hexpand true
+				:xalign 0
+				:text notification_app
+			)
+			(label
+				:class "notification-popup-urgency"
+				:text notification_urgency
+			)
+			(eventbox
+				:class "notification-action"
+				:cursor "pointer"
+				:onclick "eww close notification-popup"
+				(label :text "×")
+			)
+		)
+		(label
+			:class "notification-popup-summary"
+			:xalign 0
+			:wrap true
+			:text notification_summary
+		)
+		(label
+			:class "notification-popup-body"
+			:xalign 0
+			:wrap true
+			:text notification_body
+		)
+	)
+)
+
+(defwindow notifications
+	:monitor 0
+	:stacking "bg"
+	:windowtype "desktop"
+	:focusable true
+	:geometry (geometry
+		:x "0px"
+		:y "0px"
+		:width "520px"
+		:height "560px"
+		:anchor "center"
+	)
+	(box
+		:class "notification-panel"
+		:orientation "v"
+		:space-evenly false
+		:spacing 8
+
+		(box
+			:class "notification-header"
+			:orientation "h"
+			:space-evenly false
+			:hexpand true
+
+			(label
+				:hexpand true
+				:xalign 0
+				:text "Notifications"
+			)
+			(eventbox
+				:class "notification-action"
+				:cursor "pointer"
+				:onclick "dunstctl history-clear; ${EWW_CMD} poll notification_history"
+				(label :text "Clear")
+			)
+			(eventbox
+				:class "notification-action"
+				:cursor "pointer"
+				:onclick "eww close notifications"
+				(label :text "×")
+			)
+		)
+		(scroll :vscroll true :hscroll false
+			(box
+				:class "notification-list"
+				:orientation "v"
+				:space-evenly false
+				:spacing 6
+
+				(for notification in notification_history
+					(box
+						:class "notification-item"
+						:orientation "v"
+						:space-evenly false
+						:spacing 4
+
+						(box
+							:class "notification-item-header"
+							:orientation "h"
+							:space-evenly false
+							:hexpand true
+
+							(label
+								:class "notification-app"
+								:hexpand true
+								:xalign 0
+								:text {notification.appname}
+							)
+							(label
+								:class "notification-urgency"
+								:text {notification.urgency}
+							)
+							(eventbox
+								:class "notification-action"
+								:cursor "pointer"
+								:onclick "dunstctl history-rm ${notification.id}; ${EWW_CMD} poll notification_history"
+								(label :text "×")
+							)
+						)
+						(label
+							:class "notification-summary"
+							:xalign 0
+							:wrap true
+							:text {notification.summary}
+						)
+					)
+				)
+			)
+		)
+	)
+)

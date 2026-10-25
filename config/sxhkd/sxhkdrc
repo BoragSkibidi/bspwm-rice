@@ -139,3 +139,6 @@ super + shift + s
 
 super + v
 	copyq toggle
+
+super + n
+	eww open --toggle notifications

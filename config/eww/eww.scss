@@ -105,3 +105,70 @@ window { background: transparent; }
   border-radius: 9px;
 }
 .tray menuitem:hover { background: $hover; }
+
+// ---- notification history ----
+.notification-panel {
+  background: $bg;
+  border: $border solid $line;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.notification-header {
+  color: $primary;
+  font-size: 11pt;
+}
+
+.notification-list {
+  padding-right: 4px;
+}
+
+.notification-item {
+  background: $disabled;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.notification-app,
+.notification-urgency {
+  color: $muted;
+  font-size: 9pt;
+}
+
+.notification-summary {
+  color: $primary;
+}
+
+.notification-body {
+  color: $fg;
+}
+
+.notification-action {
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+.notification-action:hover {
+  background: $hover;
+}
+
+.notification-popup {
+  background: $bg;
+  border: $border solid $line;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.notification-popup-app,
+.notification-popup-urgency {
+  color: $muted;
+  font-size: 9pt;
+}
+
+.notification-popup-summary {
+  color: $primary;
+}
+
+.notification-popup-body {
+  color: $fg;
+}
