@@ -8,6 +8,7 @@ bspc monitor -d 1 2 3 4 5 6 7 8 9 0
 bspc config border_width 2
 bspc config window_gap 10
 bspc config top_padding 10
+bspc config ignore_ewmh_struts
 
 bspc config split_ratio 0.5
 bspc config borderless_monocle true
@@ -39,10 +40,10 @@ vesktop --disable-gpu --start-minimized &
 # discord --start-minimized &
 
 # mouse
-xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5
-xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile" 0 1
-ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 625
+xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5 &
+xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile Enabled" 0 1 &
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 1000 &
 # ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 813
 
-ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000 &
 

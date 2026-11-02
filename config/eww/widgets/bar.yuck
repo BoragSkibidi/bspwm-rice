@@ -298,28 +298,26 @@
 
 ;; ---------- window ----------
 (defwindow bar
-	:monitor 0
-  	:stacking "bg"
-  	:windowtype "desktop"
-  	:focusable true
-  	:wm-ignore false
-  	:exclusive true
-  	:reserve (struts 
-				:side "top" 
-				:distance "42px"
-			)
-  	:geometry (geometry 
-				:x "0%" 
-				:y "0px" 
-				:width "100%" 
-				:height "42px" 
-				:anchor "top center"
-			)
-  	(centerbox 
-		:class "bar" 
-		:orientation "h"
-		(left-pill)
-		(center-pill)
-		(right-pill)
-	)
+    :monitor 0
+    :stacking "bg"
+    :windowtype "dock"
+    :wm-ignore false
+    :reserve (struts
+        :side "top"
+        :distance "42px"
+    )
+    :geometry (geometry
+        :x "0%"
+        :y "0px"
+        :width "100%"
+        :height "42px"
+        :anchor "top center"
+    )
+    (centerbox
+        :class "bar"
+        :orientation "h"
+        (left-pill)
+        (center-pill)
+        (right-pill)
+    )
 )
