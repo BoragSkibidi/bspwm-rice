@@ -9,6 +9,7 @@ bspc config border_width 2
 bspc config window_gap 10
 bspc config top_padding 0
 bspc config ignore_ewmh_struts false
+# bspc rule -a '^WindowClass$' state=fullscreen layer=above
 
 
 bspc config split_ratio 0.5
@@ -32,9 +33,8 @@ unclutter --idle 2 &
 copyq &
 
 
-
-EWW_CONFIG="$HOME/code_projects/bspwm-rice/config/eww"
-eww --config "$EWW_CONFIG" daemon && eww --config "$EWW_CONFIG" open bar &
+eww daemon && eww open bar &
+~/.config/eww/fullscreen.sh &
 
 # start up softwares
 steam -silent &
