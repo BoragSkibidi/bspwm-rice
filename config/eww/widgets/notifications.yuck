@@ -12,14 +12,14 @@
 (defwindow notification-popup
 	:monitor 0
 	:stacking "fg"
-	:windowtype "desktop"
+	:windowtype "dock"
 	:focusable false
 	:geometry (geometry
-		:x "12px"
+		:x "-12px"
 		:y "54px"
 		:width "380px"
-		:height "150px"
-		:anchor "top left"
+		:height "100px"
+		:anchor "top right"
 	)
 	(box
 		:class "notification-popup"
@@ -67,8 +67,8 @@
 
 (defwindow notifications
 	:monitor 0
-	:stacking "bg"
-	:windowtype "desktop"
+	:stacking "fg"
+	:windowtype "dock"
 	:focusable true
 	:geometry (geometry
 		:x "0px"

@@ -299,7 +299,7 @@
 ;; ---------- window ----------
 (defwindow bar
     :monitor 0
-    :stacking "bg"
+	:stacking "fg"
     :windowtype "dock"
     :wm-ignore false
     :reserve (struts

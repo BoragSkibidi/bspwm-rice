@@ -7,12 +7,13 @@ bspc monitor -d 1 2 3 4 5 6 7 8 9 0
 
 bspc config border_width 2
 bspc config window_gap 10
-bspc config top_padding 10
-bspc config ignore_ewmh_struts
+bspc config top_padding 0
+bspc config ignore_ewmh_struts false
+
 
 bspc config split_ratio 0.5
-bspc config borderless_monocle true
-bspc config gapless_monocle true
+bspc config borderless_monocle false
+bspc config gapless_monocle false
 bspc config corner_radius 4
 
 bspc config focus_follows_pointer true
@@ -31,8 +32,9 @@ unclutter --idle 2 &
 copyq &
 
 
-eww daemon && eww open bar &
-~/.config/eww/fullscreen.sh &
+
+EWW_CONFIG="$HOME/code_projects/bspwm-rice/config/eww"
+eww --config "$EWW_CONFIG" daemon && eww --config "$EWW_CONFIG" open bar &
 
 # start up softwares
 steam -silent &
@@ -40,10 +42,9 @@ vesktop --disable-gpu --start-minimized &
 # discord --start-minimized &
 
 # mouse
-xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.5 &
+xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Speed" -0.75 &
 xinput set-prop "Logitech G203 LIGHTSYNC Gaming Mouse" "libinput Accel Profile Enabled" 0 1 &
-ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 1000 &
+ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 2600 &
 # ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" dpi set 813
 
 ratbagctl "Logitech G203 LIGHTSYNC Gaming Mouse" led 0 set color 000000 &
-
