@@ -33,13 +33,13 @@
 
 (defpoll media_status 	:interval "500ms" 
 	:initial ""
-  	"playerctl status 2>/dev/null || true"
+	"~/.config/eww/scripts/media.sh status 2>/dev/null || true"
 )
 
 (defpoll media_track 
 	:interval "1s" 
 	:initial ""
-	"playerctl metadata --format '{{artist}} - {{title}}' 2>/dev/null"
+	"~/.config/eww/scripts/media.sh metadata 2>/dev/null"
 )
 
 (deflisten viz 
@@ -216,15 +216,15 @@
 		(visualizer)
 		(icon-button 
 			:icon "skip-previous" 
-			:cmd "playerctl previous"
+			:cmd "~/.config/eww/scripts/media.sh previous"
 		)
 		(icon-button 
 			:icon {media_status == "Playing" ? "pause" : "play"}
-			:cmd "playerctl play-pause; sleep 0.15; ${EWW_CMD} poll media_status"
+			:cmd "~/.config/eww/scripts/media.sh play-pause; sleep 0.15; ${EWW_CMD} poll media_status"
 		)
 		(icon-button 
 			:icon "skip-next" 
-			:cmd "playerctl next"
+			:cmd "~/.config/eww/scripts/media.sh next"
 		)
 	)
 )
