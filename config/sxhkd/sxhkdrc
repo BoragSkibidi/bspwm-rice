@@ -62,11 +62,11 @@ super + d
 #
 
 # focus on window or swap location ---------------------------------------------
-super + {_,shift + }{Left,Down,Up,Right}
+super + {_,shift + }{h,j,k,l}
 	bspc node -{f,s} {west,south,north,east}
 
 # workspace shifter ----------------------------------------------------
-super + ctrl + {Left,Right}
+super + ctrl + {h,l}
 	~/.local/bin/bspc-switch-anim {prev,next}
 
 # focus the last node/desktop
@@ -76,11 +76,11 @@ super + {1-9,0}
 super + shift + {1-9,0}
 	~/.local/bin/bspc-switch-anim send '^{1-9,10}'
 
-super + ctrl + shift + alt + {Left,Right}
+super + ctrl + shift + alt + {h,l}
 	~/.local/bin/bspc-switch-anim send {prev,next}
 
 
-super + ctrl + shift + {Left,Right}
+super + ctrl + shift + {h,l}
 	~/.local/bin/bspc-switch-anim send-follow {prev,next}.local
 
 super + shift + alt {1-9,0}
